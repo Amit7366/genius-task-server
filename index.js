@@ -20,20 +20,22 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const tasksCollection = client.db("myTask").collection("tasks");
+    const usersCollection = client.db("myTask").collection("users");
 
     app.get("/tasks", async (req, res) => {
-      const query = {};
+      const id = req.query.uid;
+      const query = { taskUser: id };
       const tasks = await tasksCollection.find(query).toArray();
 
       res.send(tasks);
     });
     app.get("/completed/tasks", async (req, res) => {
-        const query = {taskStatus:true};
-        const tasks = await tasksCollection.find(query).toArray();
-  
-        res.send(tasks);
-      });
-    
+        const id = req.query.uid;
+      const query = { taskStatus: true,taskUser: id };
+      const tasks = await tasksCollection.find(query).toArray();
+
+      res.send(tasks);
+    });
 
     app.post("/tasks", async (req, res) => {
       const task = req.body;
@@ -47,10 +49,10 @@ async function run() {
       let updatedStatus = false;
       const filter = { _id: ObjectId(id) };
       const options = { upsert: true };
-      if(taskStatus === 'true'){
-         updatedStatus = false;
-      }else{
-         updatedStatus = true;
+      if (taskStatus === "true") {
+        updatedStatus = false;
+      } else {
+        updatedStatus = true;
       }
       const updatedDoc = {
         $set: {
@@ -65,33 +67,49 @@ async function run() {
       res.send(result);
     });
 
-
     app.delete("/tasks/:id", async (req, res) => {
-        const id = req.params.id;
-        const filter = { _id: ObjectId(id) };
-        const result = await tasksCollection.deleteOne(filter);
-        res.send(result);
-      });
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await tasksCollection.deleteOne(filter);
+      res.send(result);
+    });
 
-      app.put("/comment/:id", async (req, res) => {
-        const id = req.params.id;
-        const comment = req.query.comment;
-        const filter = { _id: ObjectId(id) };
-        const options = { upsert: true };
-        const updatedDoc = {
-          $set: {
-            comment: comment,
-          },
-        };
-        const result = await tasksCollection.updateOne(
-          filter,
-          updatedDoc,
-          options
-        );
-        res.send(result);
-      });
+    app.put("/comment/:id", async (req, res) => {
+      const id = req.params.id;
+      const comment = req.query.comment;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updatedDoc = {
+        $set: {
+          comment: comment,
+        },
+      };
+      const result = await tasksCollection.updateOne(
+        filter,
+        updatedDoc,
+        options
+      );
+      res.send(result);
+    });
 
+    /**
+     * User API
+     *
+     * */
 
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+    app.get("/users", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await usersCollection.count(query);
+      res.send({ feedback: result });
+    });
   } finally {
   }
 }
