@@ -43,12 +43,18 @@ async function run() {
 
     app.put("/tasks/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
+      const taskStatus = req.query.status;
+      let updatedStatus = false;
       const filter = { _id: ObjectId(id) };
       const options = { upsert: true };
+      if(taskStatus === 'true'){
+         updatedStatus = false;
+      }else{
+         updatedStatus = true;
+      }
       const updatedDoc = {
         $set: {
-          taskStatus: true,
+          taskStatus: updatedStatus,
         },
       };
       const result = await tasksCollection.updateOne(
@@ -64,6 +70,24 @@ async function run() {
         const id = req.params.id;
         const filter = { _id: ObjectId(id) };
         const result = await tasksCollection.deleteOne(filter);
+        res.send(result);
+      });
+
+      app.put("/comment/:id", async (req, res) => {
+        const id = req.params.id;
+        const comment = req.query.comment;
+        const filter = { _id: ObjectId(id) };
+        const options = { upsert: true };
+        const updatedDoc = {
+          $set: {
+            comment: comment,
+          },
+        };
+        const result = await tasksCollection.updateOne(
+          filter,
+          updatedDoc,
+          options
+        );
         res.send(result);
       });
 
