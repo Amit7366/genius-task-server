@@ -19,7 +19,12 @@ async function run(){
     try{
         const tasksCollection = client.db('myTask').collection('tasks')
 
+        app.get('/tasks', async (req,res) =>{
+            const query = {}
+            const tasks = await tasksCollection.find(query).toArray();
 
+            res.send(tasks);
+        })
 
         app.post("/tasks", async (req, res) => {
             const task = req.body;
